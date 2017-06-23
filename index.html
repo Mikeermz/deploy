@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Deploy de Aplicaciones</title>
+		<meta name="description" content="Como instlaar las apliacciones en nuestro servidor">
+		<meta name="author" content="Mikee Rmz">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/night.css" id="theme">
+		<link rel="stylesheet" href="lib/css/agate.css">
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h1>Deploy de Aplicaciones</h1>
+					<h3>Rails, Angular, Mysql, Nginx</h3>
+					<p>
+						<small>Created by <a href="#">Mikee Rmz</a> / <a target="_blank" href="http://twitter.com/mikeermz">@mikeermz</a></small>
+					</p>
+				</section>
+				<section>
+					<section>
+						<h2>¿Que es esto?</h2>
+						<p>
+							Esta pequeña guia es para explicar el proceso de instalar las aplicaciones. 
+						</p>
+						<p>
+							Como base se usara un servidor ubuntu 16.04 Xenial.
+						</p>
+					</section>
+					<section data-background="https://media.tenor.com/images/c388ce1f24a4c509bbcad89682beaec6/tenor.gif">
+					</section>
+				</section>
+				<section>
+					<h2>Instrucciones</h2>
+            <p>
+              Como saben, para poder realizar la instalacion de la aplicacion, hay que instalar tanto la <a href="#/3">API</a>, como el <a href="">Cliente</a>, apartir de aqui se dividira en dos partes esta guia, una para cada instalacion.
+            </p>
+        </section>
+        <section>
+          <h2>API</h2>
+          <p>
+            Rapidamente, hablare de como esta constituida esta parte, en el siguiente ejemplo se usa una apliaccion RoR para crear la API, para ello se requiere instalar la version de Ruby que tiene el Gemfile, MySql y Nginx.
+          </p>
+          <p>
+            En las siguientes diapositivas, aprenderemos a instalar lo que necesitamos para instalar nuestra apliaccion.
+          </p>
+        </section>
+        <section>
+					<section>
+						<h2>RUBY</h2>
+            <p>
+              Uno de las primeras cosas que hay que hacer para instalar la aplicacion, es instalar nuestras dependencias, ademas de instalar el lenguaje que se usara como backend.
+            </p>
+            <p>
+              Actualizar e Instalar dependencias
+            </p>
+            <pre><code class="Bash" data-trim contenteditable>
+              sudo apt-get update
+              sudo apt-get install git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev nodejs
+            </code></pre>
+          </section>
+          <section>
+            <p>Instalar Ruby</p>
+            <p>En el siguiente caso estaremos usando rbenv para manejar nuestras versiones de ruby e instalaermos la version de ruby 2.4</p>
+            <pre><code class="bash hljs" data-trim contenteditable>
+              cd
+              git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+              echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+              echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+              exec $SHELL
+
+              git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+              echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> ~/.bashrc
+              exec $SHELL
+
+              rbenv install 2.4.0
+              rbenv global 2.4.0
+              ruby -v
+            </code></pre>
+          </section>
+          <section>
+            <p>Instalar Bundle</p>
+            <p>Con esta gema podremos instalar nuestra aplicacion una vez que se haya clonado del repositorio, ese proceso lo veremos mas adelante.</p>
+            <pre><code class="Bash" data-trim contenteditable>
+              gem install bundler
+            </code></pre>
+						<p>Necesitamos correr el siguiente comando.</p>
+            <pre><code class="Bash" data-trim contenteditable>
+              rbenv rehash
+            </code></pre>
+					</section>
+          <section data-background="https://media.giphy.com/media/yr6hacGy4QKGY/giphy.gif">
+          </section>
+				</section>
+				<section>
+          <section>
+  					<h2>MySQL</h2>
+  					<p>
+  						Con el siguiente comando, estaremos instalando MySQL, y crearemos el usuario root (Si se gusta se puede crear otro usuario para la aplicacion, o usar el usuario root.)
+  					</p>
+            <pre><code class="Bash" data-trim contenteditable>
+              sudo apt-get install mysql-server mysql-client libmysqlclient-dev
+            </code></pre>
+          </section>
+          <section data-background="https://media.giphy.com/media/kOs64HQk2dUe4/giphy.gif">
+          </section>
+				</section>
+        <section>
+  				<section>
+  					<h2>Nginx</h2>
+  					<p>
+  						Vamos a ver la instalacion de NGINX, pero tambien tendremos la ayuda de passenger, para correr la API en produccion. =D !!!
+  					</p>
+  					<pre><code class="Bash" data-trim contenteditable>
+              sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 561F9B9CAC40B2F7
+              sudo apt-get install -y apt-transport-https ca-certificates
+
+              # Agregar Passenger APT repository
+              sudo sh -c 'echo deb https://oss-binaries.phusionpassenger.com/apt/passenger xenial main > /etc/apt/sources.list.d/passenger.list'
+              sudo apt-get update
+
+              # Install Passenger & Nginx
+              sudo apt-get install -y nginx-extras passenger
+
+              # Iniciar Nginx
+              sudo service nginx start
+            </code></pre>
+  				</section>
+  				<section>
+  					<p>Una vez instalador NGINX y Passenger, pasaremos a editar el archivo de configuracion de NGINX, no olvides usar sudo antes (usa vim, vi o nano) el archivo esta en <span class="fragment highlight-blue " >/etc/nginx/nginx.conf</span></p>
+            <pre><code class="nginx hljs" data-trim contenteditable>
+              ##
+              # Phusion Passenger
+              ##
+              # Uncomment it if you installed ruby-passenger or ruby-passenger-enterprise
+              ##
+
+              include /etc/nginx/passenger.conf;
+            </code></pre>
+  				</section>
+  				<section>
+            <p>Ahora editaremos la configuracion de passenger, no olvides usar sudo antes (usa vim, vi o nano) el archivo esta en <span class="fragment highlight-blue visible" data-fragment-index="6">/etc/nginx/passenger.conf</span></p>
+            <pre><code class="nginx hljs" data-trim contenteditable>
+              passenger_ruby /home/deploy/.rbenv/shims/ruby; # Agregamos esta linea 
+            </code></pre>
+  				</section>
+          <section>
+            <p>Comandos de NGINX</p>
+            <pre><code class="nginx hljs" data-trim contenteditable>
+              # Para reiniciar el servidor de nginx
+              sudo service nginx restart
+              # Para iniciar el servidor de nginx
+              sudo service nginx start
+              # Para detener el servidor de nginx
+              sudo service nginx stop
+            </code></pre>
+          </section>
+        </section>
+
+        <section>
+  				<section>
+            <h2>Instalando nuestro API</h2>    
+            <p>
+              En esta seccion veremos los arvhivos a editar de la API, y como encender, apagar y reiniciar la API.
+            </p>
+          </section>
+          <section>
+            <p>Creamos una carpeta en el home</p>
+            <pre><code class="bash" data-trim contenteditable>
+              mkdir [project name]
+            </code></pre>
+            <p>En este momento es necesario dirigirnos a la parte donde clonaremos nuestro repositorio (Llamase Github, Bitbucket, Gitlab...)</p>
+            <pre><code class="bash" data-trim contenteditable>
+              git clone [ruta del repositorio ...]
+
+              cd [repositorio]
+            </code></pre>
+          </section>
+          <section>
+            <h3>Modificar API</h3>
+            <p>Es necesario modificar algunos archivos para que quede en produccion, uno de esos es la configuracion de la database: </p>
+            <pre><code class="ruby" data-trim contenteditable>
+              # La ruta debe de ser config/database.yml
+              production:
+                adapter: postgresql
+                host: 127.0.0.1
+                database: my_app_name_production
+                username: deploy
+                password: YOUR_POSTGRES_PASSWORD
+                encoding: unicode
+                pool: 5
+            </code></pre>
+          </section>
+          <section>
+            <h3>Modificar API</h3>
+            <p>Generamos las llave secreta en la carpeta de la api</p>
+            <pre><code class="bash" data-trim contenteditable>
+              rake secret
+            </code></pre>
+            <p>Copiamos el codigo y lo ponemos en secrets.yml</p>
+            <pre><code class="ruby" data-trim contenteditable>
+              # La ruta es config/secrets.yml
+              
+              # Do not keep production secrets in the repository,
+              # instead read values from the environment.
+              production:
+                secret_key_base: <%= ENV["SECRET_KEY_BASE"] %>
+            </code></pre>
+          </section>
+          <section>
+            <p>Instalar gemas:</p>
+            <pre><code class="bash" data-trim contenteditable>
+              bundle install
+            </code></pre>
+            <p>Crear migrar y cargar seed en la database:</p>
+            <pre><code class="bash" data-trim contenteditable>
+              rake db:create db:migrate db:seed
+            </code></pre>
+            <p>Drop database:</p>
+            <pre><code class="bash" data-trim contenteditable>
+              rake db:drop
+            </code></pre>
+          </section>
+          <section>
+            <p>Si no hay problema, podremos correr nuestra aplicacion con passenger: </p>
+            <pre><code class="bash" data-trim contenteditable>
+              # Iniciar la aplicacion en desarrollo.
+              passenger start
+              # Iniciar la aplicacion en produccion y  demonizada.
+              passenger start -e production -d
+              # Detener la apliaccion 
+              passenger stop
+              # Reiniciar la aplicacion
+              passenger-config restart-app /
+            </code></pre>
+            <p>Ver el log de la aplicacion: </p>
+            <pre><code class="bash" data-trim contenteditable>
+              # Log de la aplicacion en desarrollo.
+              tail -f log/development.log
+              # Log de la aplicacion en produccion.
+              tail -f log/production.log
+              # Salir del log
+              ctrl + c
+            </code></pre>
+          </section>
+          <section>
+            <p>Si nuestra aplicacion cuenta con Sidekiq, hay que crear un log para este: </p>
+            <pre><code class="bash" data-trim contenteditable>
+              touch log/sidekiq.log
+            </code></pre>
+            <p>Y lo iniciamos:</p>
+            <pre><code class="bash" data-trim contenteditable>
+              bundle exec sidekiq -d -L log/sidekiq.log -c 1
+            </code></pre>
+          </section>
+          <section style="text-align: left;" data-background="http://i.giphy.com/90F8aUepslB84.gif"r>
+            <h4 style="color: yellow">... API DEPLOY NOW!</h4>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>Cliente</h2>
+            <p>
+              Nuestro cliente en esta ocacion es un cliente web, un sitio estatico, que se conectara a nuestra api, existen dos maneras, que desde el equipo se construya la aplicacion o en el servidor, recomiendo la primera para no tener que instalar mas recursos de los necesarios como es angular cli.
+            </p>
+            <p>
+              Necesitamos instalar Node, Angular-cli, PM2, http-server y confiugrar NGINX
+            </p>
+          </section>
+          <section data-background="https://media.giphy.com/media/3og0IvSCYejRlHqQ0M/giphy.gif"></section>
+        </section>
+        <section>
+            <p>
+              Cambiamos de usuario al usuario root 
+            </p>
+            <pre><code class="bash" data-trim contenteditable>
+              sudo su
+            </code></pre>
+          </section>
+        <section>        
+          <section>
+            <h2>Node</h2>
+            <p>
+              Para instalar NODE, lo realizaremos con NVM (Node Version Manager), para eso solo requerimos descargar el script de instalacion 
+            </p>
+            <pre><code class="bash" data-trim contenteditable>
+              curl -sL https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh -o install_nvm.sh
+            </code></pre>
+            <p>
+              Y lo ejecutamos
+            </p>
+            <pre><code class="bash" data-trim contenteditable>
+              bash install_nvm.sh
+            </code></pre>
+          </section>
+          <section>
+            <p>
+              Para averiguar las versiones de Node.js que están disponibles para su instalación, puede escribir:
+            </p>
+            <pre><code class="bash" data-trim contenteditable>
+              nvm ls-remote
+            </code></pre>
+            <p>Instalamos la version mas reciente con: </p>
+            <pre><code class="bash" data-trim contenteditable>
+              nvm install 7.4.0
+            </code></pre>
+          </section>
+        </section>
+        <section>
+          <h2>http-server</h2>
+          <p>
+            Esto nos iniciara el servidor de la aplicacion web, para instalarlo solo necesitamos correr:
+          </p>
+          <pre><code class="bash" data-trim contenteditable>
+            npm install http-server -g
+          </code></pre>
+        </section>
+        <section>
+          <h2>PM2</h2>
+          <p>
+            Esto es para iniciar la aplicacion, para instalarlo solo necesitamos correr:
+          </p>
+          <pre><code class="bash" data-trim contenteditable>
+            npm install pm2 -g
+          </code></pre>
+        </section>
+        <section>
+          <section>
+            <h2>Angular</h2>
+            <p>
+              Esto es para construir la aplicacion, para instalarlo solo necesitamos correr:
+            </p>
+            <pre><code class="bash" data-trim contenteditable>
+              npm install -g @angular/cli
+            </code></pre>
+          </section>
+          <section data-background="https://media.giphy.com/media/10IbSwqwi0hPJm/giphy.gif">
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>Deploy del Cliente</h2>
+            <p>
+              Vamos clonar el repositorio del cliente a nuesta carpeta ya creada de la api 
+            </p>
+            <pre><code class="bash" data-trim contenteditables>
+              # ruta debe ser /home/user/[proyecto]/
+              git clone [ruta del repositorio]
+
+              cd [proyecto]
+            </code></pre>
+            <p>
+              Dentro de la aplicacion, tenemos que instalar los componentes:
+            </p>
+            <pre><code class="bash" data-trim contenteditables>
+              npm install
+            </code></pre>              
+          </section>
+          <section>
+            <p>
+              Editamos la ruta de la configuracion del cliente por la url de la api, la cual esta en el archivo  app-config.ts
+            </p>
+            <pre><code class="js" data-trim contenteditables>
+              export class AppConfig {
+                private serverTestUrl: string = 'http://localhost:3000'; // Esta es la ruta que cambiaremos
+                private loginPath: string = 'login';
+                ...
+            </code></pre>
+            <p>
+              Una ves terminamos construiremos nuestra aplicacion con el siguiente comando:
+            </p>
+            <pre><code class="bash" data-trim contenteditables>
+              ng build --prod
+            </code></pre>
+          </section>
+          <section>
+              <p>Una vez construida la aplicacion, nos genera una carpeta de nombre dist, y con ella realizaremos lo siguiente:</p>
+              <pre><code class="bash" data-trim contenteditables>
+                # Primero copiaremos la carpeta a /var/www/
+                cp dist /var/wwww/
+            </code></pre>
+          </section>
+          <section>
+            <h4>Configuracion de NGINX</h4>
+            <p>En este caso seria editar el nombre del servidor (cambiar ip o agregar dominiio)</p>
+            <pre><code class="nginx" data-trim contenteditables>
+              server {
+                listen 80;
+                server_name 192.168.12.215;
+                index index.html;
+                root /var/www/dist;
+                location / {
+                try_files $uri $uri/ /index.html;
+                    proxy_pass http://127.0.0.1:8080;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
+              }
+            </code></pre>
+          </section>
+          <section>
+            <p>
+              Dentro de la carpeta /var/www/ creamos un archivo con el nombre de nuestra aplicion/cliente y lo terminamos con .json
+            </p>
+            <pre><code class="bash" data-trim contenteditables>
+              touch /var/www/[cliente].json
+            </code></pre>
+            <p>
+              Y lo editamos con la siguiente informacion: 
+            </p>
+            <pre><code class="json" data-trim contenteditables>
+              {
+                "apps": [
+                  {
+                    "name": "[nombre del cliente]",
+                    "cwd": "/var/www/dist", /* Carpeta donde esta el cliente */
+                    "args": "-p 8080 -d false",
+                    "script": "/root/.nvm/versions/node/v7.4.0/bin/http-server" /* depende de la version de node */
+                  }
+                ]
+              }
+            </code></pre>
+          </section>
+          <section>
+            <p>
+              Con estos pasos se enciende y se apaga el cliente
+            </p>
+            <pre><code class="bash" data-trim contenteditables>
+              # Iniciar Cliente
+              pm2 start /var/www/[cliente].json
+
+              # Apagar Cliente
+              pm2 stop [cliente]
+
+              # Reiniciar Cliente
+              pm2 restart [cliente]
+            
+              # Para ver el log
+              pm2 monit [cliente]
+            </code></pre>
+          </section>
+          <section style="text-align: left;" data-background="https://media.tenor.com/images/18b4b2d7a0db6e61f989fe3c49df6b46/tenor.gif">
+            <h2>Run Client Run</h2>
+          </section>
+        </section>
+
+				<section style="text-align: right;" data-background="https://media.giphy.com/media/hMIH7FqjfMtz2/giphy.gif">
+					<h2 style="color: black">THE END</h2>
+					<p>
+						- <a href="#">Volver a empezar</a> <br>
+						- <a href="https://github.com/hakimel/reveal.js">Source code &amp; documentation</a>
+					</p>
+				</section>
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
